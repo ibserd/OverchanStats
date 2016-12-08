@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <a href="{{ url_for('index')}}">Status</a>
+  <a href="{{ url_for('stats')}}">Stats</a>
+  <a href="{{ url_for('about')}}">About overchan</a>
+  <a href="{{ url_for('info')}}">Info</a>
+  <p>
+    <br />
+    {% block label %} {% endblock %}
+  </p>
+<p>
+  <table>
+    {% block months %} {% endblock %}
+    <tr>
+      <td>
+      {% for item in boards%}
+          <a href="{{ url_for ('stats_board_month',board=item.replace("_","."),month=months[-1])}}">{{item.replace("_",".")}}</a>
+          <br />
+      {% endfor %}
+      </td>
+      <td>
+        {% block body %}{% endblock %}
+      </td>
+    </tr>
+  </table>
+</p>
+</body>
+</html>

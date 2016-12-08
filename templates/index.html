@@ -1,0 +1,210 @@
+<html>
+<head>
+<title>Index</title>
+</head>
+<body>
+{% extends "master_index.html" %}
+{% block body %}
+<p>
+  Monitoring overchan for <b>{{days_since_start}}</b> days, since <b>{{first_update[0]}}</b>, <b>{{first_update[1]}}</b>.
+  <br />
+  Checks performed: <b>{{checks}}</b>
+  <br />
+  Checking status every hour.
+  <br /><br />
+  Last check on <b>{{now[0]}}</b> at <b>{{now[1]}}</b> UTC+1 (<b>{{time_since_last_update}}</b> minutes ago)
+  <br />
+</p>
+<p>
+  <table border ="1" style="align:center">
+    <tr>
+      <th colspan="2"></th>
+      <th colspan="3">Uptime</th>
+    </tr>
+    <tr>
+      <th>Node</th>
+      <th>Status</th>
+      <th>Today</th>
+      <th>Month</th>
+      <th>All</th>
+    </tr>
+    <tr>
+      <td>
+        <a href = "https://2hu-ch.org">2hu-ch.org</a>
+      </td>
+      <td>
+        <b>{{last_update[0]}}</b>
+      </td>
+      <td>
+        <b>{{today["node1"]}}</b>%
+      </td>
+      <td>
+        <b>{{month["node1"]}}</b>%
+      </td>
+      <td>
+        <b>{{alltime["node1"]}}</b>%
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a href = "http://nsfl.ga">nsfl.ga</a>
+      </td>
+      <td>
+        <b>{{last_update[1]}}</b>
+      </td>
+      <td>
+        <b>{{today["node2"]}}</b>%
+      </td>
+      <td>
+        <b>{{month["node2"]}}</b>%
+      </td>
+      <td>
+        <b>{{alltime["node2"]}}</b>%
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a href = "http://gchan.xyz">gchan.xyz</a>
+      </td>
+      <td>
+        <b>{{last_update[2]}}</b>
+      </td>
+      <td>
+        <b>{{today["node3"]}}</b>%
+      </td>
+      <td>
+        <b>{{month["node3"]}}</b>%
+      </td>
+      <td>
+        <b>{{alltime["node3"]}}</b>%
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a href = "http://ucavviu7wl6azuw7.onion">ucavviu7wl6azuw7.onion</a>
+      </td>
+      <td>
+        <b>{{last_update[3]}}</b>
+      </td>
+      <td>
+        <b>{{today["node4"]}}</b>%
+      </td>
+      <td>
+        <b>{{month["node4"]}}</b>%
+      </td>
+      <td>
+        <b>{{alltime["node4"]}}</b>%
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a href = "http://oniichanylo2tsi4.onion">oniichanylo2tsi4.onion</a>
+      </td>
+      <td>
+        <b>{{last_update[4]}}</b>
+      </td>
+      <td>
+        <b>{{today["node5"]}}</b>%
+      </td>
+      <td>
+        <b>{{month["node5"]}}</b>%
+      </td>
+      <td>
+        <b>{{alltime["node5"]}}</b>%
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a href = "http://ev7fnjzjdbtu3miq.onion">ev7fnjzjdbtu3miq.onion</a>
+      </td>
+      <td>
+        <b>{{last_update[5]}}</b>
+      </td>
+      <td>
+        <b>{{today["node6"]}}</b>%
+      </td>
+      <td>
+        <b>{{month["node6"]}}</b>%
+      </td>
+      <td>
+        <b>{{alltime["node6"]}}</b>%
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a href = "http://f2bksxtwzmst2dhx.onion">f2bksxtwzmst2dhx.onion</a>
+      </td>
+      <td>
+        <b>{{last_update[6]}}</b>
+      </td>
+      <td>
+        <b>{{today["node7"]}}</b>%
+      </td>
+      <td>
+        <b>{{month["node7"]}}</b>%
+      </td>
+      <td>
+        <b>{{alltime["node7"]}}</b>%
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a href = "http://yqfbo7ghmwzotrml.onion">yqfbo7ghmwzotrml.onion</a>
+      </td>
+      <td>
+        <b>{{last_update[7]}}</b>
+      </td>
+      <td>
+        <b>{{today["node8"]}}</b>%
+      </td>
+      <td>
+        <b>{{month["node8"]}}</b>%
+      </td>
+      <td>
+        <b>{{alltime["node8"]}}</b>%
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a href = "http://emvykufthqjgudpldo7tj26j57z4q2b6at6vmrfo6jxnvozmultq.b32.i2p">emvykufthqjgudp(...).i2p</a>
+      </td>
+      <td>
+        <b>{{last_update[8]}}</b>
+      </td>
+      <td>
+        <b>{{today["node9"]}}</b>%
+      </td>
+      <td>
+        <b>{{month["node9"]}}</b>%
+      </td>
+      <td>
+        <b>{{alltime["node9"]}}</b>%
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <a href = "http://g7c54d4b7yva4ktpbaabqeu2yx6axalh4gevb44afpbwm23xuuya.b32.i2p">g7c54d4b7yva4kt(...).i2p</a>
+      </td>
+      <td>
+        <b>{{last_update[9]}}</b>
+      </td>
+      <td>
+        <b>{{today["node10"]}}</b>%
+      </td>
+      <td>
+        <b>{{month["node10"]}}</b>%
+      </td>
+      <td>
+        <b>{{alltime["node10"]}}</b>%
+      </td>
+    </tr>
+  </table>
+</p>
+<p>
+  OK = 200<br />
+  FAIL != 200 && 404<br />
+  DEAD = 404
+</p>
+{% endblock %}
+</body>
+</html>

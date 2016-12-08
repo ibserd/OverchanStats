@@ -1,0 +1,21 @@
+<html>
+<head>
+<title>Index</title>
+</head>
+<body>
+  {% extends "master_stats.html" %}
+  {% block label %}Select month to view global stats or board for board specific stats{% endblock %}
+  {% block months %}
+  <tr>
+    {% for item in months %}
+    <td>
+      <a href="{{ url_for('stats_board_month',month=item,board='Global')}}">{{item.capitalize()}} 2016</a>
+    </td>
+    {% endfor %}
+  </tr>
+  {% endblock %}
+  {% block body %}
+  AYYYLMAO
+  {% endblock %}
+</body>
+</html>

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{}</title>
+</head>
+<body>
+  <a href="{{ url_for('index')}}">Status</a>
+  <a href="{{ url_for('stats')}}">Stats</a>
+  <a href="{{ url_for('about')}}">About overchan</a>
+  <a href="{{ url_for('info')}}">Info</a>
+  {% block body %}{% endblock %}
+</body>
+</html>

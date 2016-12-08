@@ -1,0 +1,21 @@
+<html>
+<head>
+<title>Stats for {{board}} on {{month}}</title>
+</head>
+<body>
+  {% extends "master_stats.html" %}
+  {% block label %}Board stats for <b>{{board}}</b> on <b>{{month.capitalize()}}</b>{% endblock %}
+  {% block months %}
+  <tr>
+    {% for item in months %}
+    <td>
+      <a href="{{ url_for('stats_board_month',month=item,board=board)}}">{{item.capitalize()}} 2016</a>
+    </td>
+    {% endfor %}
+  </tr>
+  {% endblock %}
+  {% block body %}
+  AYYYLMAO
+  {% endblock %}
+</body>
+</html>
