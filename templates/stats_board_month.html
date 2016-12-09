@@ -4,7 +4,7 @@
 </head>
 <body>
   {% extends "master_stats.html" %}
-  {% block label %}Board stats for <b>{{board}}</b> on <b>{{month.capitalize()}}</b>{% endblock %}
+  {% block label %}Board stats for <b>{{board.replace("_",".")}}</b> on <b>{{month.capitalize()}}</b>{% endblock %}
   {% block months %}
   <tr>
     {% for item in months %}
@@ -15,7 +15,50 @@
   </tr>
   {% endblock %}
   {% block body %}
-  AYYYLMAO
+
+  Origin:
+  {% for key,value in origin.items() %}
+  <br />
+  <b>{{key}}:</b> {{value}}
+  {% endfor %}
+
+  Sages: {{sages}}
+  <br />
+
+  Subject field not empty nor saged: {{subjects}}
+  <br />
+
+  Name field not empty: {{names}}
+  <br />
+
+  Posted at:
+  {% for key,value in timez.items() %}
+
+  {% if value %}
+  <br />
+  Hour: <b>{{key}}</b> Posts: <b>{{value}}</b>
+  {% endif %}
+
+  {% endfor %}
+  <br />
+
+  Posted on:
+  {% for key,value in datez.items() %}
+
+  {% if value %}
+  <br />
+  Day: <b>{{key}}</b> Posts: <b>{{value}}</b>
+  {% endif %}
+
+  {% endfor %}
+  <br />
+
+  Nodes:
+  {% for key,value in nodes.items() %}
+  <br />
+  {{key}}: <b>{{value}}</b>
+  {% endfor %}
+
   {% endblock %}
 </body>
 </html>

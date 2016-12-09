@@ -1,10 +1,11 @@
 from flask import Flask,render_template
 
-import MySQLdb,time,re
+import MySQLdb,time,re,operator
 from datetime import *
 
 app = Flask(__name__)
-class DbConnector(object):
+
+class DbConnector(): # Used for stats.html
     def __init__(self):
         credentials = []
         with open('login.txt') as login:
@@ -15,9 +16,91 @@ class DbConnector(object):
         self.host = credentials[0]
         self.user = credentials[2]
         self.passwd = credentials[3]
-    def dbConnector():
+
+    def dbConnector(self):
         db = MySQLdb.connect(self.host,self.user,self.passwd,self.db_name)
         return db
+
+    def dbGetOrigin(self,data,board):
+        dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
+        cur = dbconnect.cursor()
+        origin = {"i2p":0,"clearnet":0,"tor":0}
+        for index in origin:
+            command = "SELECT * FROM %s WHERE Origin = %r AND Data LIKE %r;" % (board,index,data)
+            cur.execute(command)
+            origin[index] = cur.rowcount
+        dbconnect.close()
+        return origin
+
+    def dbGetSage(self,data,board):
+        dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
+        cur = dbconnect.cursor()
+        command = "SELECT * FROM %s WHERE Subject = 'sage' AND Data LIKE %r;" % (board,data)
+        cur.execute(command)
+        sage_count = cur.rowcount
+        dbconnect.close()
+        return sage_count
+
+    def dbGetSubject(self,data,board):
+        dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
+        cur = dbconnect.cursor()
+        command = "SELECT * FROM %s WHERE Subject != 'sage' AND Subject !='None' AND Data LIKE %r;" % (board,data)
+        cur.execute(command)
+        non_empty_subject = cur.rowcount
+        dbconnect.close()
+        return non_empty_subject
+
+    def dbGetName(self,data,board):
+        dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
+        cur = dbconnect.cursor()
+        command = "SELECT * FROM %s WHERE Author != 'Anonymous' AND Data LIKE %r;" % (board,data)
+        cur.execute(command)
+        non_empty_name = cur.rowcount
+        dbconnect.close()
+        return non_empty_name
+
+    def dbGetTime(self,data,board):
+        dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
+        cur = dbconnect.cursor()
+        timez = {"00":0,"01":0,"02":0,"03":0,"04":0,"05":0,"06":0,"07":0,"08":0,"09":0,"10":0,"11":0,"12":0,"13":0,"14":0,"15":0,"16":0,"17":0,"18":0,"19":0,"20":0,"21":0,"22":0,"23":0}
+        for item in timez:
+            hour = "\'%s:__:__\'" % item
+            command = "SELECT * FROM %s WHERE Timex LIKE %s AND Data LIKE %r;" % (board,hour,data)
+            cur.execute(command)
+            hour_count = cur.rowcount
+            timez[item] = hour_count
+        dbconnect.close()
+        return timez
+
+    def dbGetDate(self,data,board):
+        dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
+        cur = dbconnect.cursor()
+        datez = {"01":0,"02":0,"03":0,"04":0,"05":0,"06":0,"07":0,"08":0,"09":0,"10":0,"11":0,"12":0,"13":0,"14":0,"15":0,"16":0,"17":0,"18":0,"19":0,"20":0,"21":0,"22":0,"23":0,"24":0,"25":0,"26":0,"27":0,"28":0,"29":0,"30":0,"31":0}
+        for item in datez:
+            data = "%s-%s-%s" % (str(data.split("-")[0]),str(data.split("-")[1]),item)
+            command = "SELECT * FROM %s WHERE Data LIKE %r;" % (board,data)
+            cur.execute(command)
+            datez_count = cur.rowcount
+            datez[item] = datez_count
+        dbconnect.close()
+        return datez
+
+    def dbGetNode(self,data,board):
+        dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
+        cur = dbconnect.cursor()
+        command = "SELECT msgID FROM %s WHERE Data LIKE %r;" % (board,data)
+        cur.execute(command)
+        nodess = list(cur.fetchall())
+        dbconnect.close()
+
+        nodes = {}
+        for item in nodess:
+            node = str(item).strip("',()").split("@")[1]
+            if node not in nodes:
+                nodes[node] = 1
+            else:
+                nodes[node] += 1
+        return nodes
 
 
 def uptime(uptime): #Used within index(status page)
@@ -124,8 +207,30 @@ def stats():
 def stats_board_month(board,month):
     boards = boardList()
     months = monthsRecorded()
-    if board.replace(".","_") in boards and month in months:
-        return render_template('stats_board_month.html',board=board,month=month,boards=boards,months=months)
+    months_int = {"january":1,"february":2,"march":3,"april":4,"may":5,"june":6,"july":7,"august":8,"september":9,"october":10,"november":11,"december":12}
+
+    ##Declared for methods
+    board = board.replace(".","_")
+    month_int = months_int[month]
+
+    ##Im gonna rewrite it in a year
+    if month_int == 11 or month_int == 12:
+        data = '2016-' + str(month_int) + '-%'
+    else:
+        data = '2017-' + str(month_int) + '-%'
+
+    ##Returned to Flask (stats_board_month.html)
+    origin = DbConnector().dbGetOrigin(data,board)
+    sages = DbConnector().dbGetSage(data,board)
+    subjects = DbConnector().dbGetSubject(data,board)
+    names = DbConnector().dbGetName(data,board)
+    timez = DbConnector().dbGetTime(data,board)
+    datez = DbConnector().dbGetDate(data,board)
+    nodes = DbConnector().dbGetNode(data,board)
+
+    ##Check if user was playing with url :)
+    if board in boards and month in months:
+        return render_template('stats_board_month.html',board=board,month=month,boards=boards,months=months,origin=origin,sages=sages,subjects=subjects,names=names,timez=timez,datez=datez,nodes=nodes)
     else:
         return render_template('not_found.html',name = board)
 
