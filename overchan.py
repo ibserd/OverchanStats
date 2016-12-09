@@ -21,6 +21,37 @@ class DbConnector(): # Used for stats.html
         db = MySQLdb.connect(self.host,self.user,self.passwd,self.db_name)
         return db
 
+    def dbBoardList(self): #Used within stats
+        db = MySQLdb.connect(self.host,self.user,self.passwd,self.db_name)
+        cur = db.cursor()
+        cur.execute("show tables;")
+        tables = cur.fetchall()
+        db.close()
+        boards = ['Global']
+        boards_blacklist=['ctl','overchan_porn','posts','status']
+        for board in tables:
+            board = str(board).strip(",()'")
+            if board not in boards_blacklist:
+                boards.append(board)
+
+        regex = re.compile('overchan_test*')
+        filtered_out = [string for string in boards if re.match(regex, string)]
+        for filtered in filtered_out:
+            boards = filter(lambda a: a != filtered, boards)
+
+        return boards
+
+    def dbPostCount(self,data):
+        db = MySQLdb.connect(self.host,self.user,self.passwd,self.db_name)
+        cur = db.cursor()
+        command = "SELECT * FROM posts WHERE Data LIKE %r;" % data
+        cur.execute(command)
+        ppd = cur.fetchall()
+        db.close()
+        ppd = dict((x,y) for x,y in ppd)
+        sorted_ppd = sorted(ppd.items(), key=operator.itemgetter(1),reverse=True)
+        return sorted_ppd
+
     def dbGetOrigin(self,data,board):
         dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
         cur = dbconnect.cursor()
@@ -102,44 +133,37 @@ class DbConnector(): # Used for stats.html
                 nodes[node] += 1
         return nodes
 
+class Tools(object):
+    def __init__(self):
+        pass
 
-def uptime(uptime): #Used within index(status page)
-    nodes = {"node1":0,"node2":0,"node3":0,"node4":0,"node5":0,"node6":0,"node7":0,"node8":0,"node9":0,"node10":0}
-    time = 0
-    while time < len(uptime): #how many records for selected range
-        node = 1
-        while node <= len(nodes): #Total of nodes, <= bc starting from 1
-            if uptime[time][node] == "OK":
-                nodes["node"+str(node)] += 1
-            node += 1
-        time += 1
+    def uptime(self,uptime): #Used within index(status page)
+        nodes = {"node1":0,"node2":0,"node3":0,"node4":0,"node5":0,"node6":0,"node7":0,"node8":0,"node9":0,"node10":0}
+        time = 0
+        while time < len(uptime): #how many records for selected range
+            node = 1
+            while node <= len(nodes): #Total of nodes, <= bc starting from 1
+                if uptime[time][node] == "OK":
+                    nodes["node"+str(node)] += 1
+                node += 1
+            time += 1
+        for key,value in nodes.items():
+            if nodes[key] == len(uptime):
+                nodes[key] = 100
+            else:
+                nodes[key] = "%.2f" %round((float(value)/len(uptime) * 100),2)
+        return nodes
 
-    for key,value in nodes.items():
-        if nodes[key] == len(uptime):
-            nodes[key] = 100
+    def data(self,month): # Used with stats
+        months_int = {"january":1,"february":2,"march":3,"april":4,"may":5,"june":6,"july":7,"august":8,"september":9,"october":10,"november":11,"december":12}
+        month_int = months_int[month]
+
+        if month_int == 11 or month_int == 12:
+            data = '2016-' + str(month_int) + '-%'
         else:
-            nodes[key] = "%.2f" %round((float(value)/len(uptime) * 100),2)
-    return nodes
+            data = '2017-' + str(month_int) + '-%'
 
-def boardList(): #Used within stats
-    db = DbConnector().dbConnector()
-    cur = db.cursor()
-    cur.execute("show tables;")
-    tables = cur.fetchall()
-    db.close()
-    boards = ['Global']
-    boards_blacklist=['ctl','overchan_porn','posts','status']
-    for board in tables:
-        board = str(board).strip(",()'")
-        if board not in boards_blacklist:
-            boards.append(board)
-
-    regex = re.compile('overchan_test*')
-    filtered_out = [string for string in boards if re.match(regex, string)]
-    for filtered in filtered_out:
-        boards = filter(lambda a: a != filtered, boards)
-
-    return boards
+        return data
 
 def monthsRecorded():
     months = ['november','december']
@@ -178,20 +202,20 @@ def index():
     cur.execute(command)
     uptime_today = cur.fetchall()
     ##Returned to flask
-    today = uptime(uptime_today)
+    today = Tools().uptime(uptime_today)
     ##Month
     month_date = "'"+now[0][0:8] + "%'"
     command = "SELECT * FROM status WHERE Data LIKE %s ;" % month_date
     cur.execute(command)
     uptime_month = cur.fetchall()
     ##Returned to flask
-    month = uptime(uptime_month)
+    month = Tools().uptime(uptime_month)
     ##ALL
     command = "SELECT * FROM status"
     cur.execute(command)
     uptime_all = cur.fetchall()
     ##Returned to flask
-    alltime = uptime(uptime_all)
+    alltime = Tools().uptime(uptime_all)
 
     db.close() #done with db.
 
@@ -199,25 +223,26 @@ def index():
 
 @app.route('/stats')
 def stats():
-    boards = boardList()
+    boards = DbConnector().dbBoardList()
     months = monthsRecorded()
     return render_template('stats.html',boards=boards,months = months)
 
+@app.route('/stats/Global/<month>')
+def globalStats(month):
+    boards = DbConnector().dbBoardList()
+    boards.remove("Global")
+    months = monthsRecorded()
+    data = Tools().data(month)
+    ppd = DbConnector().dbPostCount(data)
+
+    return render_template('stats_global.html',boards=boards,months=months,ppd=ppd)
+
 @app.route('/stats/<board>/<month>')
 def stats_board_month(board,month):
-    boards = boardList()
-    months = monthsRecorded()
-    months_int = {"january":1,"february":2,"march":3,"april":4,"may":5,"june":6,"july":7,"august":8,"september":9,"october":10,"november":11,"december":12}
-
-    ##Declared for methods
+    boards = DbConnector().dbBoardList()
     board = board.replace(".","_")
-    month_int = months_int[month]
-
-    ##Im gonna rewrite it in a year
-    if month_int == 11 or month_int == 12:
-        data = '2016-' + str(month_int) + '-%'
-    else:
-        data = '2017-' + str(month_int) + '-%'
+    months = monthsRecorded()
+    data = Tools().data(month)
 
     ##Returned to Flask (stats_board_month.html)
     origin = DbConnector().dbGetOrigin(data,board)
@@ -228,7 +253,6 @@ def stats_board_month(board,month):
     datez = DbConnector().dbGetDate(data,board)
     nodes = DbConnector().dbGetNode(data,board)
 
-    ##Check if user was playing with url :)
     if board in boards and month in months:
         return render_template('stats_board_month.html',board=board,month=month,boards=boards,months=months,origin=origin,sages=sages,subjects=subjects,names=names,timez=timez,datez=datez,nodes=nodes)
     else:
