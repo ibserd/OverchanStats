@@ -18,7 +18,7 @@
     <tr>
       <td>
       {% for item in boards%}
-          <a href="{{ url_for ('stats_board_month',board=item.replace("_","."),month=months[-1])}}">{{item.replace("_",".")}}</a>
+          <a href="{{ url_for ('stats_board_month',board=item.replace("_","."),year=months[-1].split(" ")[1],month=months[-1].split(" ")[0])}}">{{item.replace("_",".")}}</a>
           <br />
       {% endfor %}
       </td>

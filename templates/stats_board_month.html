@@ -9,15 +9,16 @@
   <tr>
     {% for item in months %}
     <td>
-      <a href="{{ url_for('stats_board_month',month=item,board=board)}}">{{item.capitalize()}} 2016</a>
+      <a href="{{ url_for('stats_board_month',year=item[-4:],month=item.split(" ")[0],board=board)}}">{{item.capitalize()}}</a>
     </td>
     {% endfor %}
   </tr>
   {% endblock %}
   {% block body %}
-
+  Total: <b>{{total}}</b> 
+  <br />
   Origin:
-  {% for key,value in origin.items() %}
+  {% for key,value in origin %}
   <br />
   <b>{{key}}:</b> {{value}}
   {% endfor %}
@@ -32,7 +33,7 @@
   <br />
 
   Posted at:
-  {% for key,value in timez.items() %}
+  {% for key,value in timez %}
 
   {% if value %}
   <br />
@@ -43,7 +44,7 @@
   <br />
 
   Posted on:
-  {% for key,value in datez.items() %}
+  {% for key,value in datez %}
 
   {% if value %}
   <br />
@@ -54,7 +55,7 @@
   <br />
 
   Nodes:
-  {% for key,value in nodes.items() %}
+  {% for key,value in nodes %}
   <br />
   {{key}}: <b>{{value}}</b>
   {% endfor %}

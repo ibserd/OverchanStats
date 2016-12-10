@@ -21,25 +21,33 @@ class DbConnector(): # Used for stats.html
         db = MySQLdb.connect(self.host,self.user,self.passwd,self.db_name)
         return db
 
-    def dbBoardList(self): #Used within stats
+    def dbTableList(self): #Used within stats
         db = MySQLdb.connect(self.host,self.user,self.passwd,self.db_name)
         cur = db.cursor()
         cur.execute("show tables;")
         tables = cur.fetchall()
         db.close()
-        boards = ['Global']
-        boards_blacklist=['ctl','overchan_porn','posts','status']
-        for board in tables:
-            board = str(board).strip(",()'")
-            if board not in boards_blacklist:
-                boards.append(board)
+        tables_list = []
+        tables_blacklist=['posts','status','boards']
+        for table in tables:
+            table = str(table).strip(",()'")
+            if table not in tables_blacklist:
+                tables_list.append(table)
 
-        regex = re.compile('overchan_test*')
-        filtered_out = [string for string in boards if re.match(regex, string)]
-        for filtered in filtered_out:
-            boards = filter(lambda a: a != filtered, boards)
+        return tables_list
 
-        return boards
+    def dbListBoards(self):
+        dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
+        cur = dbconnect.cursor()
+        command = "SELECT * FROM boards"
+        cur.execute(command)
+        boards = cur.fetchall()
+        dbconnect.close()
+        boards_list = ['Global']
+        for item in list(boards):
+            boards_list.append(str(item).strip("(),'"))
+
+        return boards_list
 
     def dbPostCount(self,data):
         db = MySQLdb.connect(self.host,self.user,self.passwd,self.db_name)
@@ -52,21 +60,31 @@ class DbConnector(): # Used for stats.html
         sorted_ppd = sorted(ppd.items(), key=operator.itemgetter(1),reverse=True)
         return sorted_ppd
 
+    def dbTotalPosts(self,data,board):
+        db = MySQLdb.connect(self.host,self.user,self.passwd,self.db_name)
+        cur = db.cursor()
+        command = "SELECT * FROM %s WHERE Board LIKE %r;" % (data,str(board))
+        cur.execute(command)
+        totalPosts = cur.rowcount
+        db.close()
+        return totalPosts
+
     def dbGetOrigin(self,data,board):
         dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
         cur = dbconnect.cursor()
         origin = {"i2p":0,"clearnet":0,"tor":0}
         for index in origin:
-            command = "SELECT * FROM %s WHERE Origin = %r AND Data LIKE %r;" % (board,index,data)
+            command = "SELECT * FROM %s WHERE Origin = %r AND Board LIKE %r;" % (data,index,str(board))
             cur.execute(command)
             origin[index] = cur.rowcount
         dbconnect.close()
-        return origin
+        sorted_origin = sorted(origin.items(), key=operator.itemgetter(1),reverse=True)
+        return sorted_origin
 
     def dbGetSage(self,data,board):
         dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
         cur = dbconnect.cursor()
-        command = "SELECT * FROM %s WHERE Subject = 'sage' AND Data LIKE %r;" % (board,data)
+        command = "SELECT * FROM %s WHERE Subject = 'sage' AND Board LIKE %r;" % (data,str(board))
         cur.execute(command)
         sage_count = cur.rowcount
         dbconnect.close()
@@ -75,7 +93,7 @@ class DbConnector(): # Used for stats.html
     def dbGetSubject(self,data,board):
         dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
         cur = dbconnect.cursor()
-        command = "SELECT * FROM %s WHERE Subject != 'sage' AND Subject !='None' AND Data LIKE %r;" % (board,data)
+        command = "SELECT * FROM %s WHERE Subject != 'sage' AND Subject !='None' AND Board LIKE %r;" % (data,str(board))
         cur.execute(command)
         non_empty_subject = cur.rowcount
         dbconnect.close()
@@ -84,7 +102,7 @@ class DbConnector(): # Used for stats.html
     def dbGetName(self,data,board):
         dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
         cur = dbconnect.cursor()
-        command = "SELECT * FROM %s WHERE Author != 'Anonymous' AND Data LIKE %r;" % (board,data)
+        command = "SELECT * FROM %s WHERE Author != 'Anonymous' AND Board LIKE %r;" % (data,str(board))
         cur.execute(command)
         non_empty_name = cur.rowcount
         dbconnect.close()
@@ -96,30 +114,32 @@ class DbConnector(): # Used for stats.html
         timez = {"00":0,"01":0,"02":0,"03":0,"04":0,"05":0,"06":0,"07":0,"08":0,"09":0,"10":0,"11":0,"12":0,"13":0,"14":0,"15":0,"16":0,"17":0,"18":0,"19":0,"20":0,"21":0,"22":0,"23":0}
         for item in timez:
             hour = "\'%s:__:__\'" % item
-            command = "SELECT * FROM %s WHERE Timex LIKE %s AND Data LIKE %r;" % (board,hour,data)
+            command = "SELECT * FROM %s WHERE Timex LIKE %s AND Board LIKE %r;" % (data,hour,str(board))
             cur.execute(command)
             hour_count = cur.rowcount
             timez[item] = hour_count
         dbconnect.close()
-        return timez
+        sorted_timez = sorted(timez.items(), key=operator.itemgetter(1),reverse=True)
+        return sorted_timez
 
     def dbGetDate(self,data,board):
         dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
         cur = dbconnect.cursor()
         datez = {"01":0,"02":0,"03":0,"04":0,"05":0,"06":0,"07":0,"08":0,"09":0,"10":0,"11":0,"12":0,"13":0,"14":0,"15":0,"16":0,"17":0,"18":0,"19":0,"20":0,"21":0,"22":0,"23":0,"24":0,"25":0,"26":0,"27":0,"28":0,"29":0,"30":0,"31":0}
         for item in datez:
-            data = "%s-%s-%s" % (str(data.split("-")[0]),str(data.split("-")[1]),item)
-            command = "SELECT * FROM %s WHERE Data LIKE %r;" % (board,data)
+            data2 = "%s-%s-%s" % (str(data.split("_")[0]),str(data.split("_")[1]),item)
+            command = "SELECT * FROM %s WHERE Board LIKE %r AND Data LIKE %r;" % (data,str(board),data2)
             cur.execute(command)
             datez_count = cur.rowcount
             datez[item] = datez_count
         dbconnect.close()
-        return datez
+        sorted_datez = sorted(datez.items(), key=operator.itemgetter(1),reverse=True)
+        return sorted_datez
 
     def dbGetNode(self,data,board):
         dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
         cur = dbconnect.cursor()
-        command = "SELECT msgID FROM %s WHERE Data LIKE %r;" % (board,data)
+        command = "SELECT msgID FROM %s WHERE Board LIKE %r;" % (data,str(board))
         cur.execute(command)
         nodess = list(cur.fetchall())
         dbconnect.close()
@@ -131,7 +151,8 @@ class DbConnector(): # Used for stats.html
                 nodes[node] = 1
             else:
                 nodes[node] += 1
-        return nodes
+        sorted_nodes = sorted(nodes.items(), key=operator.itemgetter(1),reverse=True)
+        return sorted_nodes
 
 class Tools(object):
     def __init__(self):
@@ -154,20 +175,23 @@ class Tools(object):
                 nodes[key] = "%.2f" %round((float(value)/len(uptime) * 100),2)
         return nodes
 
-    def data(self,month): # Used with stats
+    def data(self,year,month): # Used with stats
         months_int = {"january":1,"february":2,"march":3,"april":4,"may":5,"june":6,"july":7,"august":8,"september":9,"october":10,"november":11,"december":12}
         month_int = months_int[month]
-
-        if month_int == 11 or month_int == 12:
-            data = '2016-' + str(month_int) + '-%'
+        if month_int<10:
+            data = str(year) + "_0" + str(month_int)
         else:
-            data = '2017-' + str(month_int) + '-%'
-
+            data = str(year) + "_" + str(month_int)
         return data
 
-def monthsRecorded():
-    months = ['november','december']
-    return months
+    def monthsRecorded(self):
+        months = []
+        tables = DbConnector().dbTableList()
+        months_int = {"01":"january","02":"february","03":"march","04":"april","05":"may","06":"june","07":"july","08":"august","09":"september","10":"october","11":"november","12":"december"}
+        for item in tables [-10:]:
+            months.append(months_int[str(item[-2:])] + " " + item[:-3])
+
+        return months
 
 @app.route('/')
 def index():
@@ -223,28 +247,27 @@ def index():
 
 @app.route('/stats')
 def stats():
-    boards = DbConnector().dbBoardList()
-    months = monthsRecorded()
+    boards = DbConnector().dbListBoards()
+    months = Tools().monthsRecorded()
     return render_template('stats.html',boards=boards,months = months)
 
-@app.route('/stats/Global/<month>')
-def globalStats(month):
-    boards = DbConnector().dbBoardList()
-    boards.remove("Global")
-    months = monthsRecorded()
-    data = Tools().data(month)
+@app.route('/stats/Global/<year>/<month>')
+def globalStats(year,month):
+    boards = DbConnector().dbListBoards()
+    months = Tools().monthsRecorded()
+    data = Tools().data(year,month)
     ppd = DbConnector().dbPostCount(data)
 
-    return render_template('stats_global.html',boards=boards,months=months,ppd=ppd)
+    return render_template('stats_global.html',year=year,month=month,boards=boards,months=months,data=data,ppd=ppd)
 
-@app.route('/stats/<board>/<month>')
-def stats_board_month(board,month):
-    boards = DbConnector().dbBoardList()
-    board = board.replace(".","_")
-    months = monthsRecorded()
-    data = Tools().data(month)
+@app.route('/stats/<board>/<year>/<month>')
+def stats_board_month(board,year,month):
+    boards = DbConnector().dbListBoards()
+    months = Tools().monthsRecorded()
+    data = Tools().data(year,month)
 
     ##Returned to Flask (stats_board_month.html)
+    total = DbConnector().dbTotalPosts(data,board)
     origin = DbConnector().dbGetOrigin(data,board)
     sages = DbConnector().dbGetSage(data,board)
     subjects = DbConnector().dbGetSubject(data,board)
@@ -253,8 +276,8 @@ def stats_board_month(board,month):
     datez = DbConnector().dbGetDate(data,board)
     nodes = DbConnector().dbGetNode(data,board)
 
-    if board in boards and month in months:
-        return render_template('stats_board_month.html',board=board,month=month,boards=boards,months=months,origin=origin,sages=sages,subjects=subjects,names=names,timez=timez,datez=datez,nodes=nodes)
+    if board in boards: # and month in months:
+        return render_template('stats_board_month.html',board=board,year=year,month=month,boards=boards,months=months,origin=origin,sages=sages,subjects=subjects,names=names,timez=timez,datez=datez,nodes=nodes,total=total)
     else:
         return render_template('not_found.html',name = board)
 
