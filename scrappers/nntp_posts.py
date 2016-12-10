@@ -31,6 +31,26 @@ class DBconnector(object):
         dbconnect.commit()
         dbconnect.close()
 
+    def dbListBoards(self):
+        dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
+        cur = dbconnect.cursor()
+        command = "SELECT * FROM boards"
+        cur.execute(command)
+        boards = cur.fetchall()
+        dbconnect.close()
+        boards_list = []
+        for item in list(boards):
+            boards_list.append(str(item).strip("(),'"))
+        return boards_list
+
+    def dbInsertBoard(self,board):
+        dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
+        cur = dbconnect.cursor()
+        command = "INSERT INTO boards(board) VALUES (%r)" % board
+        cur.execute(command)
+        dbconnect.commit()
+        dbconnect.close()
+
 class Scrapper(object):
     def __init__(self):
         self.node = 'http://2hu-ch.org/'
@@ -98,6 +118,10 @@ class Scrapper(object):
                 except MySQLdb.IntegrityError: ## If record is already in the DB
                     threads_skipped_count += 1
 
+                boards_list = DBconnector().dbListBoards()
+                if board not in boards_list:
+                    DBconnector().dbInsertBoard(board)
+
                 try: ## If thread has any replies
                     for item in soup.find_all('div',{'class':'post reply'}):
                         replynumber += 1
@@ -126,6 +150,9 @@ class Scrapper(object):
                             posts_new_count += 1
                         except MySQLdb.IntegrityError: ## If record is already in the DB
                             posts_skipped_count += 1
+                            
+                        if board not in boards_list:
+                            DBconnector().dbInsertBoard(board)
                 except:
                     pass
             except TypeError: ## Thread cant be scrapped :(
