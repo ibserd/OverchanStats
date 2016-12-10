@@ -2,6 +2,7 @@
 
 import MySQLdb
 import operator
+import requests
 
 class dbConnector(object):
     def __init__(self):
