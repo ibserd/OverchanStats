@@ -6,19 +6,19 @@
   {% extends "master_stats.html" %}
   {% block label %}Select month to view global stats or board for board specific stats{% endblock %}
   {% block months %}
-  <tr>
+  <table>
+    <tr>
     {% for item in months %}
     <td>
       <a href="{{ url_for('stats_global',year=item[-4:],month=item.split(" ")[0])}}">{{item.capitalize()}}</a>
     </td>
     {% endfor %}
-  </tr>
+    </tr>
+  </table>
+
   {% endblock %}
   {% block body %}
-  {% for item in ppd %}
-  <br />
-  {{item[0]}}: <b>{{item[1]}}</b>
-  {% endfor %}
+  <img src="/static/graphs/{{year}}-{{month_graph}}_GlobalGraph.png" />
   {% endblock %}
 </body>
 </html>

@@ -256,8 +256,14 @@ def stats_global(year,month):
     boards = DbConnector().dbListBoards()
     months = Tools().monthsRecorded()
     data = Tools().data(year,month)
+    months_int = {"january":1,"february":2,"march":3,"april":4,"may":5,"june":6,"july":7,"august":8,"september":9,"october":10,"november":11,"december":12}
+    month_int = months_int[month]
+    if month_int<10:
+        month_graph = "0" + str(month_int)
+    else:
+        month_graph = str(month_int)
 
-    return render_template('stats_global.html',year=year,month=month,boards=boards,months=months,data=data)
+    return render_template('stats_global.html',year=year,month=month,boards=boards,months=months,data=data,month_graph=month_graph)
 
 @app.route('/stats/<board>/<year>/<month>')
 def stats_board_month(board,year,month):

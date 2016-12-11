@@ -6,6 +6,7 @@
   {% extends "master_stats.html" %}
   {% block label %}Board stats for <b>{{board.replace("_",".")}}</b> on <b>{{month.capitalize()}}</b>{% endblock %}
   {% block months %}
+  <table>
   <tr>
     {% for item in months %}
     <td>
@@ -13,9 +14,10 @@
     </td>
     {% endfor %}
   </tr>
+  </table>
   {% endblock %}
   {% block body %}
-  Total: <b>{{total}}</b> 
+  Total: <b>{{total}}</b>
   <br />
   Origin:
   {% for key,value in origin %}
