@@ -9,7 +9,7 @@
   <tr>
     {% for item in months %}
     <td>
-      <a href="{{ url_for('stats_board_month',year=item[-4:],month=item[:5],board='Global')}}">{{item.capitalize()}}</a>
+      <a href="{{ url_for('stats_global',year=item[-4:],month=item.split(" ")[0],board='Global')}}">{{item.capitalize()}}</a>
     </td>
     {% endfor %}
   </tr>

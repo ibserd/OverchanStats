@@ -252,13 +252,12 @@ def stats():
     return render_template('stats.html',boards=boards,months = months)
 
 @app.route('/stats/Global/<year>/<month>')
-def globalStats(year,month):
+def stats_global(year,month):
     boards = DbConnector().dbListBoards()
     months = Tools().monthsRecorded()
     data = Tools().data(year,month)
-    ppd = DbConnector().dbPostCount(data)
 
-    return render_template('stats_global.html',year=year,month=month,boards=boards,months=months,data=data,ppd=ppd)
+    return render_template('stats_global.html',year=year,month=month,boards=boards,months=months,data=data)
 
 @app.route('/stats/<board>/<year>/<month>')
 def stats_board_month(board,year,month):
