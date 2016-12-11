@@ -1,4 +1,4 @@
-import MySQLdb
+import MySQLdb,datetime
 import matplotlib.pyplot as plt
 
 class DbConnector(): # Used for stats.html
@@ -24,8 +24,10 @@ class DbConnector(): # Used for stats.html
 
         return tables
 
-year = "2016"
-month = "11"
+now= datetime.datetime.now()
+year = str(now.year)
+month = str(now.month)
+
 days = []
 posts = []
 posts_tulpe = DbConnector().dbGetPosts(year,month)
