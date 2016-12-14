@@ -24,23 +24,70 @@ class DbConnector(): # Used for stats.html
 
         return tables
 
-now= datetime.datetime.now()
-year = str(now.year)
-month = str(now.month)
+    def dbGetTables(self):
+        dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
+        cur = dbconnect.cursor()
+        command = "SHOW TABLES;"
+        cur.execute(command)
+        tables = cur.fetchall()
+        dbconnect.close()
+        tables_list = []
+        for item in tables:
+            item = str(item).strip("()',")
+            tables_list.append(item)
 
-days = []
-posts = []
-posts_tulpe = DbConnector().dbGetPosts(year,month)
-for item in posts_tulpe:
-    days.append(int(item[0][-2:]))
-    posts.append(int(item[1]))
+        return tables_list
 
-plt.figure()
-plt.plot(days,posts,label="Global")
-plt.ylabel("Posts per day")
-plt.xlabel("Day of the month")
-title = "%s-%s Global posts per day" %(year,month)
-plt.title(title)
-plt.legend(loc="upper left")
-filename = "%s-%s_GlobalGraph.png" %(year,month)
-plt.savefig(filename)
+    def dbGetMonthPosts(self,table):
+        dbconnect = MySQLdb.connect(host=self.host,db=self.db_name,user=self.user,passwd=self.passwd)
+        cur = dbconnect.cursor()
+        command = "SELECT * FROM %s" % table
+        cur.execute(command)
+        posts = cur.rowcount
+        dbconnect.close()
+        return posts
+
+class Plotter(object):
+    def daily(self):
+        now= datetime.datetime.now()
+        year = str(now.year)
+        month = str(now.month)
+
+        days = []
+        posts = []
+        posts_tulpe = DbConnector().dbGetPosts(year,month)
+        for item in posts_tulpe:
+            days.append(int(item[0][-2:]))
+            posts.append(int(item[1]))
+
+        plt.figure()
+        plt.plot(days,posts,label="Global")
+        plt.ylabel("Posts per day")
+        plt.xlabel("Day of the month")
+        title = "%s-%s Global posts per day" %(year,month)
+        plt.title(title)
+        plt.legend(loc="upper left")
+        filename = "%s-%s_GlobalGraph.png" %(year,month)
+        plt.savefig(filename)
+
+    def monthly(self):
+        tables = DbConnector().dbGetTables()[-13:-3]
+        month=[]
+        posts=[]
+
+        for table in tables:
+            month.append(int(table[-2:]))
+            posts.append(int(DbConnector().dbGetMonthPosts(table)))
+
+        plt.figure()
+        plt.plot(month,posts,label="Global monthly")
+        plt.ylabel("Posts per month")
+        plt.xlabel("Month")
+        title = "Global posts per month"
+        plt.title(title)
+        plt.legend(loc="upper left")
+        filename = "Monthly_GlobalGraph.png"
+        plt.savefig(filename)
+
+Plotter().daily()
+Plotter().monthly()

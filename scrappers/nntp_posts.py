@@ -57,7 +57,7 @@ class Scrapper(object):
 
     def ukko_scrapper(self):
         ukko_urls = []
-        for n in range(1): ## Change to scrap thru more than 10 pages
+        for n in range(11): ## Change to scrap thru more than 10 pages
             ukko_urls.append('ukko-%d.html' % n)
         req = requests.get(self.node + 'ukko.html')
         soup = BeautifulSoup(req.content,'html.parser')
@@ -100,7 +100,7 @@ class Scrapper(object):
                 timex = raw_data.split('T')[1].split('-')[0]
                 if "Z" in timex: # For some reason sometimes Z is added
                     timex = timex.strip("Z")
-                subject = str(soup.find('span',{"class":"subject"}).text)
+                subject = soup.find('span',{"class":"subject"}).text.encode('utf-8')
                 try:
                     message = str(soup.find('div',{'class':'post_body'}).text.encode('ascii','ignore'))
                 except:
@@ -115,12 +115,13 @@ class Scrapper(object):
                 try:
                     DBconnector().dbInsert(table,is_op,board,origin,author,msgid,data,timex,subject,message,tripcode,replynumber,iD,postid)
                     threads_new_count += 1
-                except MySQLdb.IntegrityError: ## If record is already in the DB
+                except (MySQLdb.IntegrityError,MySQLdb.ProgrammingError): ## If record is already in the DB or the date is earlier than 01.2015
                     threads_skipped_count += 1
 
-                boards_list = DBconnector().dbListBoards()
-                if board not in boards_list:
+                try:
                     DBconnector().dbInsertBoard(board)
+                except MySQLdb.IntegrityError:
+                    pass
 
                 try: ## If thread has any replies
                     for item in soup.find_all('div',{'class':'post reply'}):
@@ -138,7 +139,7 @@ class Scrapper(object):
                         timex = raw_data.split('T')[1].split('-')[0]
                         if "Z" in timex: # For some reason sometimes Z is added
                             timex = timex.strip("Z")
-                        subject = str(item.find('span',{"class":"subject"}).text)
+                        subject = item.find('span',{"class":"subject"}).text.encode('utf-8')
                         message = str(item.find('div',{'class':'post_body'}).text.encode('ascii','ignore'))
                         postid = str(item.find('a',{'class':'postno'}).text.strip('>'))
                         try:
@@ -148,11 +149,13 @@ class Scrapper(object):
                         try:
                             DBconnector().dbInsert(table,is_op,board,origin,author,msgid,data,timex,subject,message,tripcode,replynumber,iD,postid)
                             posts_new_count += 1
-                        except MySQLdb.IntegrityError: ## If record is already in the DB
+                        except (MySQLdb.IntegrityError,MySQLdb.ProgrammingError): ## If record is already in the DB or the date is earlier than 01.2015
                             posts_skipped_count += 1
-                            
-                        if board not in boards_list:
+
+                        try:
                             DBconnector().dbInsertBoard(board)
+                        except MySQLdb.IntegrityError:
+                            pass
                 except:
                     pass
             except TypeError: ## Thread cant be scrapped :(
